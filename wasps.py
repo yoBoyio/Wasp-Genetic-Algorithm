@@ -1,9 +1,9 @@
 import numpy as np
 import math
 from geneticalgorithm import geneticalgorithm as ga
-
-
 from numpy import genfromtxt
+
+# import dataset
 nests = genfromtxt('wasps.csv', delimiter=',')
 
 
@@ -15,7 +15,9 @@ def count_max_distance():
     MAX_DISTANCE = 0
     for nest in nests:
         nest_distance = 0
+        # compare current nest with every other nest
         for restnest in nests:
+            # last 2 columns are X and Y coordinates
             distance = count_distance(nest[-2:], restnest[-2:])
             if distance > nest_distance:
                 nest_distance = distance
@@ -24,17 +26,12 @@ def count_max_distance():
     return MAX_DISTANCE
 
 
-print('total wasps: ', sum(nests[:, 0]))
-
-
-DMAX = count_max_distance()
-
-
 def count_nest_kills(bomb_location, nest):
     nest_wasps = nest[0]
     nest_location = nest[-2:]
     distance = count_distance(bomb_location, nest_location)
     score = round(nest_wasps*(DMAX/(20*distance + 0.00001)))
+    # if is strong enough to kill more than given nest's wasps, then the kill count in equal to the nest wasps.
     if score > nest_wasps:
         return nest_wasps
     else:
@@ -62,8 +59,12 @@ def f(X):
     return kill_sum
 
 
-varbound = np.array([[0, 100]]*6)
+print('total wasps: ', sum(nests[:, 0]))
 
+DMAX = count_max_distance()
+
+# The problem dimensions are 6, since we have 3 bombs and each bomb has 2 coordinates.
+varbound = np.array([[0, 100]]*6)
 
 algorithm_param = {'max_num_iteration': 3000,
                    'population_size': 300,
@@ -72,7 +73,7 @@ algorithm_param = {'max_num_iteration': 3000,
                    'crossover_probability': 0.5,
                    'parents_portion': 0.3,
                    'crossover_type': 'one_point',
-                   'max_iteration_without_improv': 1000}
+                   'max_iteration_without_improv': 10}
 
 model = ga(function=f, dimension=6, variable_type='real',
            variable_boundaries=varbound, algorithm_parameters=algorithm_param)
