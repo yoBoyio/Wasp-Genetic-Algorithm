@@ -45,6 +45,8 @@ beta: [0,1]
     modifier for roulette.
     Higher beta gives more probability to higher solutions
 
+elitism_rate: [0,1]
+    Percentage of current population members to be passed onto the next one
 
 Returns
 -------
@@ -56,7 +58,7 @@ best_score: int
 
 def run(score_function, total_variables, bounds, population_size,
         generations, children_population_rate=1,
-        gamma=0.1, mutation_rate=0.1, mutation_step_size=0.1, beta=1):
+        gamma=0.1, mutation_rate=0.1, mutation_step_size=0.1, beta=1, elitism_rate=0.1):
 
     # initialize best solution
     best_solution = [0]*total_variables
@@ -130,12 +132,21 @@ def run(score_function, total_variables, bounds, population_size,
 
             children_population.append(child_1)
             children_population.append(child_2)
-        # merge populations
-        population += children_population
+    # merge populations via elitism
+        # sort population
         population = sorted(population, key=lambda y: y['score'], reverse=True)
-        # elitism
-        population = population[0:population_size//2]
-        population += population[-(population_size//2):]
+
+        # pass the elites to the new population
+        new_population = population[0:int(elitism_rate*population_size)]
+
+        children_population = sorted(
+            children_population, key=lambda y: y['score'], reverse=True)
+
+        # pass the best children to the next
+        new_population += children_population[0:int(
+            (1-elitism_rate)*population_size)]
+
+        population = new_population
 
     return best_solution, best_score
 
