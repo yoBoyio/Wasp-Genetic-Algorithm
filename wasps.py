@@ -60,10 +60,24 @@ def f(X):
     return kill_sum
 
 
+def calculate_bounds(bounds):
+    min_bounds = [0]*6
+    max_bounds = []
+    for i in range(6):
+        if i % 2 == 0:  # Χ
+            max_bounds.append(map_size[0])
+        else:  # Υ
+            max_bounds.append(map_size[1])
+    return {'min_bounds': min_bounds, 'max_bounds': max_bounds}
+
+
 print('total wasps: ', sum(nests[:, 0]))
 
 DMAX = count_distance([0, 0], map_size)
 
 
-ga.run(score_function=f, total_variables=6, bounds=map_size,
-       population_size=350, generations=1000, mutation_rate=0.05)
+best_solution, best_score = ga.run(score_function=f, total_variables=6, bounds=calculate_bounds(map_size),
+                                   population_size=100, generations=300, mutation_rate=0.2, mutation_step_size=0.1, gamma=0.4, beta=0.6)
+
+print(f'best_score: {best_score}')
+print(f'best_solution: {best_solution}')
