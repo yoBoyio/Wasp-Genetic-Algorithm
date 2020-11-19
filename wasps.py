@@ -77,7 +77,8 @@ DMAX = count_distance([0, 0], map_size)
 
 
 best_solution, best_score = ga.run(score_function=f, total_variables=6, bounds=calculate_bounds(map_size),
-                                   population_size=100, generations=300, mutation_rate=0.2, mutation_step_size=0.1, gamma=0.4, beta=0.6)
+                                   population_size=100, generations=300, mutation_rate=0.2, mutation_step_size=0.1, gamma=0.4,
+                                   beta=0.6, elitism_rate=0.1)
 
 print(f'best_score: {best_score}')
 print(f'best_solution: {best_solution}')
