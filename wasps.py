@@ -1,10 +1,11 @@
 import numpy as np
 import math
-from geneticalgorithm import geneticalgorithm as ga
 from numpy import genfromtxt
+import ga
 
 # import dataset
 nests = genfromtxt('wasps.csv', delimiter=',')
+map_size = [100, 100]
 
 
 def count_distance(position1, position2):
@@ -54,28 +55,15 @@ def f(X):
     bomb1 = X[:2]
     bomb2 = X[2:4]
     bomb3 = X[4:6]
-    kill_sum = -np.sum([count_bomb_kills(bomb1),
-                        count_bomb_kills(bomb2), count_bomb_kills(bomb3)])
+    kill_sum = np.sum([count_bomb_kills(bomb1),
+                       count_bomb_kills(bomb2), count_bomb_kills(bomb3)])
     return kill_sum
 
 
 print('total wasps: ', sum(nests[:, 0]))
 
-DMAX = count_max_distance()
+DMAX = count_distance([0, 0], map_size)
 
-# The problem dimensions are 6, since we have 3 bombs and each bomb has 2 coordinates.
-varbound = np.array([[0, 100]]*6)
 
-algorithm_param = {'max_num_iteration': 3000,
-                   'population_size': 300,
-                   'mutation_probability': 0.05,
-                   'elit_ratio': 0.01,
-                   'crossover_probability': 0.5,
-                   'parents_portion': 0.3,
-                   'crossover_type': 'one_point',
-                   'max_iteration_without_improv': 10}
-
-model = ga(function=f, dimension=6, variable_type='real',
-           variable_boundaries=varbound, algorithm_parameters=algorithm_param)
-
-model.run()
+ga.run(score_function=f, total_variables=6, bounds=map_size,
+       population_size=350, generations=1000, mutation_rate=0.05)
