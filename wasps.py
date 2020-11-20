@@ -2,6 +2,9 @@ import numpy as np
 import math
 from numpy import genfromtxt
 import ga
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cbook as cbook
 
 # import dataset
 initial_nests = genfromtxt('wasps.csv', delimiter=',')
@@ -85,3 +88,24 @@ best_solution, best_score = ga.run(score_function=f, total_variables=6, bounds=c
 
 print(f'best_score: {best_score}')
 print(f'best_solution: {best_solution}')
+ 
+    
+fig,ax=plt.subplots()
+#display nesrs
+for row in nests: 
+    x=row[1]
+    y=row[2]
+    ax.scatter(x,y,s=150,alpha=0.5,c='green')
+
+#display bombs
+for i in range(0,len(best_solution)-1,2):
+    x=best_solution[i]
+    y=best_solution[i+1]
+    ax.scatter(x,y,s=250,c="red")
+
+ax.set_xlabel("x",fontsize=15)
+ax.set_ylabel("y",fontsize=15)
+ax.set_title("Bombs and nests")
+ax.grid(True)
+fig.tight_layout()
+plt.show()
