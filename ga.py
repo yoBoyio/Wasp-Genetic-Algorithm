@@ -57,8 +57,8 @@ best_score: int
 
 
 def run(score_function, total_variables, bounds, population_size,
-        generations, children_population_rate=1,
-        gamma=0.1, mutation_rate=0.1, mutation_step_size=0.1, beta=1, elitism_rate=0.1):
+        generations, children_population_rate=1, gamma=0.1,
+        mutation_rate=0.1, mutation_step_size=0.1, beta=1, elitism_rate=0.1):
 
     # initialize best solution
     best_solution = [0]*total_variables
@@ -94,57 +94,48 @@ def run(score_function, total_variables, bounds, population_size,
         scores = np.array([x['score'] for x in population])
         avg_score = np.mean(scores)
         if avg_score != 0:  # normalization
-            scores = scores / avg_score
+            scores /= avg_score
         probabilities = np.exp(-beta*scores)
 
         print(
             f'generation: {g} / {generations}, best score: {best_score}')
 
         children_population = []
-        for i in range(total_children//2):  # /2 since we generate 2 children per iteration
+        for _ in range(total_children//2):  # /2 since we generate 2 children per iteration
             parent_1 = population[roulette_selection(probabilities)]
             parent_2 = population[roulette_selection(probabilities)]
 
-            # Crossover
-            child_1, child_2 = crossover(parent_1, parent_2, gamma)
+            # Generate offsprings
+            child_1, child_2 = generate_children(
+                parent_1, parent_2, gamma, mutation_rate, mutation_step_size, bounds)
 
-            # mutation
-            child_1 = mutate(child_1, mutation_rate, mutation_step_size)
-            child_2 = mutate(child_2, mutation_rate, mutation_step_size)
+            # Evaluate offsprings
+            best_score, best_solution = evaluate_child(
+                child_1, child_2, best_score, best_solution, score_function)
 
-            # Refactor position via bounds
-            child_1 = apply_bounds(
-                child_1, bounds['min_bounds'], bounds['max_bounds'])
-            child_2 = apply_bounds(
-                child_2, bounds['min_bounds'], bounds['max_bounds'])
-
-            # Evaluate first offspring
-            child_1['score'] = score_function(child_1['position'])
-            if child_1['score'] > best_score:
-                best_score = child_1['score']
-                best_solution = child_1['position']
-
-            # Evaluate second offspring
-            child_2['score'] = score_function(child_2['position'])
-            if child_2['score'] > best_score:
-                best_score = child_2['score']
-                best_solution = child_2['position']
-
-            children_population.append(child_1)
-            children_population.append(child_2)
+            # Add offsprings to child population
+            children_population += [child_1, child_2]
     # merge populations via elitism
         # sort population
         population = sorted(population, key=lambda y: y['score'], reverse=True)
 
         # pass the elites to the new population
-        new_population = population[0:int(elitism_rate*population_size)]
+        total_elites = int(elitism_rate*population_size)
+        new_population = population[0:total_elites]
 
         children_population = sorted(
             children_population, key=lambda y: y['score'], reverse=True)
 
-        # pass the best children to the next
-        new_population += children_population[0:int(
-            (1-elitism_rate)*population_size)]
+    # pass the best children to the next
+        # if population_size = children_population_size,remove elite length
+        if(children_population_rate == 1):
+            new_population += children_population[0:int(
+                (1-elitism_rate)*population_size)]
+        # population_size != children_population_size, therefore add every child + rest of population best
+        else:
+            new_population += children_population
+            population_rest_best_size = population_size-total_children
+            new_population += population[total_elites: population_rest_best_size]
 
         population = new_population
 
@@ -156,6 +147,38 @@ def apply_bounds(x, min_bounds, max_bounds):
     x['position'] = np.minimum(x['position'], max_bounds)
     x['position'] = np.maximum(x['position'], min_bounds)
     return x
+
+
+def generate_children(parent_1, parent_2, gamma, mutation_rate, mutation_step_size, bounds):
+    # Crossover
+    child_1, child_2 = crossover(parent_1, parent_2, gamma)
+
+    # mutation
+    child_1 = mutate(child_1, mutation_rate, mutation_step_size)
+    child_2 = mutate(child_2, mutation_rate, mutation_step_size)
+
+    # Refactor position via bounds
+    child_1 = apply_bounds(
+        child_1, bounds['min_bounds'], bounds['max_bounds'])
+    child_2 = apply_bounds(
+        child_2, bounds['min_bounds'], bounds['max_bounds'])
+    return child_1, child_2
+
+
+def evaluate_child(child_1, child_2, best_score, best_solution, score_function):
+    # Evaluate first offspring
+    child_1['score'] = score_function(child_1['position'])
+    if child_1['score'] > best_score:
+        best_score = child_1['score']
+        best_solution = child_1['position']
+
+    # Evaluate second offspring
+    child_2['score'] = score_function(child_2['position'])
+    if child_2['score'] > best_score:
+        best_score = child_2['score']
+        best_solution = child_2['position']
+
+    return best_score, best_solution
 
 
 def mutate(x, mutation_rate, mutation_step_size):
@@ -175,6 +198,7 @@ def mutate(x, mutation_rate, mutation_step_size):
 def crossover(p1, p2, gamma):
     child_1 = p1.copy()
     child_2 = p1.copy()
+    # len(alpha) = total_variablesj
     alpha = np.random.uniform(-gamma, 1+gamma, *child_1['position'].shape)
     child_1['position'] = alpha*p1['position'] + (1-alpha)*p2['position']
     child_2['position'] = alpha*p2['position'] + (1-alpha)*p1['position']

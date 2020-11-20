@@ -4,7 +4,8 @@ from numpy import genfromtxt
 import ga
 
 # import dataset
-nests = genfromtxt('wasps.csv', delimiter=',')
+initial_nests = genfromtxt('wasps.csv', delimiter=',')
+nests = initial_nests.copy()
 map_size = [100, 100]
 
 
@@ -12,7 +13,7 @@ def count_distance(position1, position2):
     return math.sqrt((position1[0]-position2[0])**2 + (position1[1]-position2[1])**2)
 
 
-def count_max_distance():
+def count_max__nest_distance_of_current_map():
     MAX_DISTANCE = 0
     for nest in nests:
         nest_distance = 0
@@ -51,7 +52,7 @@ def count_bomb_kills(bomb):
 
 def f(X):
     global nests
-    nests = genfromtxt('wasps.csv', delimiter=',')
+    nests = initial_nests.copy()
     bomb1 = X[:2]
     bomb2 = X[2:4]
     bomb3 = X[4:6]
@@ -75,10 +76,12 @@ print('total wasps: ', sum(nests[:, 0]))
 
 DMAX = count_distance([0, 0], map_size)
 
+# set seed
+np.random.seed(120)
 
 best_solution, best_score = ga.run(score_function=f, total_variables=6, bounds=calculate_bounds(map_size),
-                                   population_size=100, generations=300, mutation_rate=0.2, mutation_step_size=0.1, gamma=0.4,
-                                   beta=0.6, elitism_rate=0.1)
+                                   population_size=100, generations=250, mutation_rate=0.2, mutation_step_size=0.2, gamma=0.4,
+                                   beta=0.6, elitism_rate=0.1, children_population_rate=1)
 
 print(f'best_score: {best_score}')
 print(f'best_solution: {best_solution}')
