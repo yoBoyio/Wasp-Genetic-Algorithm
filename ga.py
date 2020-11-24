@@ -1,6 +1,5 @@
 import numpy as np
 import operator
-
 """
 run(score_function, total_variables, bounds, population_size,
         generations, children_population_rate=1,
@@ -61,11 +60,10 @@ def run(score_function, total_variables, bounds, population_size,
         mutation_rate=0.1, mutation_step_size=0.1, beta=1, elitism_rate=0.1):
 
     # initialize best solution
+
     best_solution = [0]*total_variables
     best_score = 0
-
-
-# initialize population
+# initialize  population
     population = []
     for _ in range(population_size):
         # random position inside bounds
@@ -136,9 +134,8 @@ def run(score_function, total_variables, bounds, population_size,
             new_population += children_population
             population_rest_best_size = population_size-total_children
             new_population += population[total_elites: population_rest_best_size]
-
+        
         population = new_population
-
     return best_solution, best_score
 
 
@@ -211,3 +208,5 @@ def roulette_selection(probabilities):
     indexes = np.argwhere(r <= c)
     # Return the first chosen index
     return indexes[0][0]
+
+
