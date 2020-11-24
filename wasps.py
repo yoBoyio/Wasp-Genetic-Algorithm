@@ -5,7 +5,7 @@ import ga
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
-
+import time
 # import dataset
 initial_nests = genfromtxt('wasps.csv', delimiter=',')
 nests = initial_nests.copy()
@@ -81,35 +81,32 @@ DMAX = count_distance([0, 0], map_size)
 
 # set seed
 np.random.seed(120)
-
-best_solution, best_score = ga.run(score_function=f, total_variables=6, bounds=calculate_bounds(map_size),
+start=time.time()
+best_solution, best_score , plot2= ga.run(score_function=f, total_variables=6, bounds=calculate_bounds(map_size),
                                    population_size=100, generations=250, mutation_rate=0.2, mutation_step_size=0.2, gamma=0.4,
                                    beta=0.6, elitism_rate=0.1, children_population_rate=1)
+end=time.time()
 
 print(f'best_score: {best_score}')
 print(f'best_solution: {best_solution}')
+print(f'time: {round(end-start)}')
+  
+fig,ax=plt.subplots()
+#display nesrs
+for row in nests: 
+    x=row[1]
+    y=row[2]
+    ax.scatter(x,y,s=150,alpha=0.5,c='green')
 
+#display bombs
+for i in range(0,len(best_solution)-1,2):
+    x=best_solution[i]
+    y=best_solution[i+1]
+    ax.scatter(x,y,s=250,c="red")
 
-fig, ax = plt.subplots()
-# display nesrs
-for row in nests:
-    x = row[1]
-    y = row[2]
-    ax.scatter(x, y, s=150, alpha=0.5, c='green')
-
-# display bombs
-for i in range(0, len(best_solution)-1, 2):
-    x = best_solution[i]
-    y = best_solution[i+1]
-    ax.scatter(x, y, s=250, c="red")
-
-ax.set_xlabel("x", fontsize=15)
-ax.set_ylabel("y", fontsize=15)
+ax.set_xlabel("x",fontsize=15)
+ax.set_ylabel("y",fontsize=15)
 ax.set_title("Bombs and nests")
 ax.grid(True)
-if(map_size[0] == map_size[1]):  # map is square
-    ax.set_aspect('equal')
 fig.tight_layout()
-plt.xlim(right=map_size[0])
-plt.ylim(top=map_size[1])
 plt.show()
